@@ -20,7 +20,7 @@ const {
   confirmationEmbed
 } = require('../flight-ui');
 
-const data = { name: 'add-flight', description: 'Submit a flight to the Emirates PTFS FIDS.' };
+const data = { name: 'add-flight', description: 'Add a flight to the schedule.' };
 
 function cancelReply() {
   return { content: 'Flight entry cancelled.', components: [], ephemeral: true };

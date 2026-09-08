@@ -195,3 +195,18 @@ The bot requires permission to view/send messages and embed links in the weekly 
 `/add-flight` creates the Discord Scheduled Event first, saves its URL through `POST /api/flights`, and shows the event link in the Discord confirmation. The weekly Discord flight listing includes a link button for each flight that has an event URL. The public FIDS website does not display Discord event links.
 
 Railway should use npm: keep `package-lock.json`, keep `pnpm-lock.yaml` out of the repository, and run `npm install` before `npm start`.
+
+
+## Discord-first flight operations
+
+The Discord bot is the primary interface for flight operations. Staff can add, retrieve, update, and remove flights entirely from Discord. The existing FIDS website remains in the project as a display layer and is not required for day-to-day flight management.
+
+### Bot commands
+
+- `/add-flight` — guided flight creation with an optional Discord Scheduled Event created automatically.
+- `/flights` — retrieve the current schedule, a UTC week, a date, or departures/arrivals.
+- `/update-flight` — change an existing flight's status.
+- `/remove-flight` — remove an existing flight and its Discord Scheduled Event when one is linked.
+- `/weekly-flight` — publish the current weekly schedule to the configured channel.
+
+All flight persistence continues through the project's existing flight service/database so the FIDS display and Discord bot use the same data. Discord is the only intended operational interface.

@@ -11,10 +11,13 @@ const { startWeeklyScheduler } = require('./scheduler');
 const { weeklyFlightEmbed, weeklyFlightListing } = require('./flight-ui');
 const addFlight = require('./commands/add-flight');
 const weeklyFlight = require('./commands/weekly-flight');
+const flightsCommand = require('./commands/flights');
+const updateFlight = require('./commands/update-flight');
+const removeFlight = require('./commands/remove-flight');
 
 let botPromise = null;
 
-const commands = [addFlight.data, weeklyFlight.data];
+const commands = [addFlight.data, flightsCommand.data, updateFlight.data, removeFlight.data, weeklyFlight.data];
 
 async function registerCommands(config) {
   const rest = new REST({ version: '10' }).setToken(config.discordToken);
@@ -94,6 +97,9 @@ async function startBot() {
       try {
         if (interaction.isChatInputCommand()) {
           if (interaction.commandName === 'add-flight') return addFlight.execute(interaction, { config, sessions });
+          if (interaction.commandName === 'flights') return flightsCommand.execute(interaction);
+          if (interaction.commandName === 'update-flight') return updateFlight.execute(interaction);
+          if (interaction.commandName === 'remove-flight') return removeFlight.execute(interaction);
           if (interaction.commandName === 'weekly-flight') return weeklyFlight.execute(interaction, {
             config,
             postWeeklyMessage: async () => {

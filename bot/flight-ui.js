@@ -18,13 +18,13 @@ const SESSION_TTL_MS = 10 * 60 * 1000;
 function weeklyFlightEmbed() {
   return new EmbedBuilder()
     .setTitle('Weekly Flight Schedule — Submissions Open')
-    .setDescription('The new weekly flight schedule is now open for submissions.\n\nUse **/add-flight** to submit a departure or arrival to the Emirates PTFS FIDS.')
+    .setDescription('The weekly flight schedule is ready for submissions.\n\nUse **/add-flight** to add a departure or arrival.')
     .addFields(
       { name: 'Submission window', value: 'Open now', inline: true },
       { name: 'Time standard', value: 'GMT / UTC', inline: true },
       { name: 'Flight entry', value: '`/add-flight`', inline: true }
     )
-    .setFooter({ text: 'Emirates PTFS · Flight Information Display System' })
+    .setFooter({ text: 'Emirates Flight Operations' })
     .setTimestamp();
 }
 
@@ -40,7 +40,7 @@ function weeklyFlightListing(flights) {
       embeds: [new EmbedBuilder()
         .setTitle('Weekly Flight Schedule')
         .setDescription('No flights are currently scheduled for this week.')
-        .setFooter({ text: 'Emirates PTFS · Flight Information Display System' })
+        .setFooter({ text: 'Emirates Flight Operations' })
         .setTimestamp()],
       components: []
     };
@@ -56,7 +56,7 @@ function weeklyFlightListing(flights) {
       embeds: [new EmbedBuilder()
         .setTitle('Emirates PTFS — Weekly Flight Schedule')
         .setDescription(current.join('\n\n'))
-        .setFooter({ text: 'Times are GMT / UTC · Emirates PTFS FIDS' })
+        .setFooter({ text: 'Times are GMT / UTC · Emirates Flight Operations' })
         .setTimestamp()],
       components: rows
     });
@@ -201,7 +201,7 @@ function confirmationEmbed(flight) {
       { name: 'Aircraft', value: flight.aircraft, inline: true },
       { name: 'Terminal', value: flight.terminal, inline: true }
     )
-    .setFooter({ text: 'Emirates PTFS · Flight Information Display System' })
+    .setFooter({ text: 'Emirates Flight Operations' })
     .setTimestamp();
 }
 
