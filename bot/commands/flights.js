@@ -1,5 +1,5 @@
 const { listFlights, weeklyFlights } = require('../api');
-const { weeklyFlightListing, weeklyAnnouncementMessages } = require('../flight-ui');
+const { flightListingMessage, weeklyAnnouncementMessages } = require('../flight-ui');
 
 const data = {
   name: 'flights',
@@ -23,9 +23,7 @@ async function execute(interaction) {
     if (isWeekly) {
       const summary = await weeklyFlights();
       const announcement = weeklyAnnouncementMessages(summary.flights, summary.weekStart);
-      await interaction.editReply(announcement.header);
-      for (const message of announcement.containers) await interaction.followUp({ ...message, ephemeral: true });
-      await interaction.followUp({ ...announcement.footer, ephemeral: true });
+      await interaction.editReply({ ...announcement.message, files: announcement.files });
       return;
     }
 
@@ -33,9 +31,7 @@ async function execute(interaction) {
     if (date) flights = flights.filter((flight) => flight.date === date);
     if (type) flights = flights.filter((flight) => flight.type === type);
 
-    const messages = weeklyFlightListing(flights, date || undefined);
-    await interaction.editReply(messages[0]);
-    for (const message of messages.slice(1)) await interaction.followUp({ ...message, ephemeral: true });
+    await interaction.editReply(flightListingMessage(flights, date ? `Emirates PTFS Flights — ${date}` : 'Emirates PTFS Flight Schedule')); 
   } catch (error) {
     console.error('[Discord] /flights failed:', error);
     return interaction.editReply({ content: 'I could not retrieve the flight schedule right now.' });

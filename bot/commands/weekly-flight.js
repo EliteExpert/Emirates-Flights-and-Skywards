@@ -1,5 +1,4 @@
 const { PermissionFlagsBits } = require('discord.js');
-const { listFlights } = require('../api');
 
 const data = {
   name: 'weekly-flight',

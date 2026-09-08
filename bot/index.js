@@ -51,9 +51,7 @@ async function startBot() {
       if (!channel?.isTextBased?.()) throw new Error('Weekly flight channel is unavailable or not text-based.');
       const summary = await weeklyFlights();
       const announcement = weeklyAnnouncementMessages(summary.flights, summary.weekStart);
-      await channel.send(announcement.header);
-      for (const message of announcement.containers) await channel.send(message);
-      await channel.send(announcement.footer);
+      await channel.send({ ...announcement.message, files: announcement.files });
     };
 
     client.once(Events.ClientReady, async (readyClient) => {
@@ -67,7 +65,9 @@ async function startBot() {
       try {
         const channel = await readyClient.channels.fetch(config.weeklyFlightChannelId);
         if (!channel?.isTextBased?.()) console.error('[Discord] WEEKLY_FLIGHT_CHANNEL_ID is not a text channel.');
-        else startWeeklyScheduler(() => postWeeklyMessage(channel));
+        else {
+          startWeeklyScheduler(() => postWeeklyMessage(channel));
+        }
       } catch (error) {
         console.error('[Discord] Weekly channel is unavailable:', error);
         startWeeklyScheduler(async () => {
