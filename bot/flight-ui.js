@@ -118,7 +118,7 @@ function weeklyAnnouncementMessage(flights, weekStart = currentGmtWeekStart(), b
       const type = flight.type === 'departure' ? 'DEP' : 'ARR';
       const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
       const safeEventUrl = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? eventUrl : '';
-      const eventLink = safeEventUrl ? ` · [Event link ↗](${safeEventUrl})` : '';
+      const eventLink = safeEventUrl ? ` · **[Event link ↗](${safeEventUrl})**` : '';
       const flightText = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
 
       // Each flight is its own TextDisplay so native Components V2 separators can sit between them.
@@ -145,7 +145,7 @@ function weeklyAnnouncementMessage(flights, weekStart = currentGmtWeekStart(), b
   );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `[View the live board in the FIDS ↗](${boardUrl})\n-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>`
+      `**[View the live board in the FIDS ↗](${boardUrl})**\n-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>`
     )
   );
 
