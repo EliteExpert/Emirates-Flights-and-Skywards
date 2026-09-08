@@ -216,6 +216,7 @@ app.get('/api/flights/weekly-summary', assertApiAccess, async (req, res, next) =
       weekStart,
       weekEnd,
       totalFlights: flights.length,
+      flights,
       message: weeklyDiscordMessage(flights, weekStart, boardUrl)
     });
   } catch (error) {

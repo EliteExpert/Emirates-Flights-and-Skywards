@@ -1,6 +1,5 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { listFlights } = require('../api');
-const { weeklyFlightListing } = require('../flight-ui');
+const { listFlights, weeklySummary } = require('../api');
+const { weeklySummaryMessage, weeklyFlightListing } = require('../flight-ui');
 
 const data = {
   name: 'flights',
@@ -38,15 +37,27 @@ function filterFlights(flights, interaction) {
 async function execute(interaction) {
   await interaction.deferReply({ ephemeral: true });
   try {
+    const date = interaction.options.getString('date');
+    const type = interaction.options.getString('type');
+    const week = interaction.options.getBoolean('week');
+    const isWeekly = week || (!date && !type);
+
+    if (isWeekly) {
+      // server.js owns the weekly definition: current Sunday through Saturday, GMT/UTC.
+      const summary = await weeklySummary();
+      return interaction.editReply(weeklySummaryMessage(summary));
+    }
+
     const flights = filterFlights(await listFlights(), interaction);
     const messages = weeklyFlightListing(flights);
-    const label = interaction.options.getString('date') || (interaction.options.getString('type') === 'departure' ? 'Departures' : interaction.options.getString('type') === 'arrival' ? 'Arrivals' : 'Current Schedule');
+    const label = date || (type === 'departure' ? 'Departures' : 'Arrivals');
+
     if (messages.length === 1) {
-      return interaction.editReply({ content: `**${label}**`, embeds: messages[0].embeds, components: messages[0].components || [] });
+      return interaction.editReply({ content: `**${label}**`, ...messages[0] });
     }
-    await interaction.editReply({ content: `**${label}**`, embeds: messages[0].embeds, components: messages[0].components || [] });
+    await interaction.editReply({ content: `**${label}**`, ...messages[0] });
     for (const message of messages.slice(1)) {
-      await interaction.followUp({ embeds: message.embeds, components: message.components || [], ephemeral: true });
+      await interaction.followUp({ ...message, ephemeral: true });
     }
   } catch (error) {
     console.error('[Discord] /flights failed:', error);

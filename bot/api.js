@@ -34,6 +34,14 @@ async function listFlights() {
   return body;
 }
 
+async function weeklySummary() {
+  const body = await request('/api/flights/weekly-summary');
+  if (!body || typeof body !== 'object' || !Array.isArray(body.flights)) {
+    throw new Error('Flight service returned an invalid weekly schedule.');
+  }
+  return body;
+}
+
 async function createFlight(flight) {
   return request('/api/flights', { method: 'POST', body: JSON.stringify(flight) });
 }
@@ -52,4 +60,4 @@ async function removeFlight(identity) {
   });
 }
 
-module.exports = { request, listFlights, createFlight, updateStatus, removeFlight };
+module.exports = { request, listFlights, weeklySummary, createFlight, updateStatus, removeFlight };

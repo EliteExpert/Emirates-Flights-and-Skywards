@@ -28,61 +28,110 @@ function weeklyFlightEmbed() {
     .setTimestamp();
 }
 
-function weeklyFlightListing(flights) {
+function addGmtDays(date, days) {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function currentGmtWeekStart() {
+  const now = new Date();
+  const sunday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay()));
+  return sunday.toISOString().slice(0, 10);
+}
+
+function weeklyEventComponents(flights) {
+  const buttons = [];
+  for (const flight of flights) {
+    const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
+    if (!eventUrl || !/^https:\/\/discord(?:app)?\.com\//i.test(eventUrl)) continue;
+    buttons.push(new ButtonBuilder()
+      .setLabel(`${flight.flightNumber} Event`)
+      .setStyle(ButtonStyle.Link)
+      .setURL(eventUrl));
+  }
+
+  const rows = [];
+  for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
+    rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
+  }
+  return rows;
+}
+
+function weeklySummaryMessage(summary) {
+  if (!summary || typeof summary.message !== 'string') {
+    throw new Error('FIDS weekly summary is missing its formatted message.');
+  }
+  return {
+    content: summary.message,
+    components: weeklyEventComponents(Array.isArray(summary.flights) ? summary.flights : [])
+  };
+}
+
+function weeklyFlightListing(flights, weekStart = currentGmtWeekStart(), boardUrl = null) {
+  const dateFormat = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  });
+  const conciseDate = (date) => dateFormat.format(date).replace(',', '');
   const sorted = [...flights].sort((a, b) => {
     const ad = `${a.date}T${a.departureTime || a.arrivalTime || '00:00'}:00Z`;
     const bd = `${b.date}T${b.departureTime || b.arrivalTime || '00:00'}:00Z`;
     return ad.localeCompare(bd);
   });
 
+  const effectiveBoardUrl = boardUrl || null;
+  const header = [
+    '**<:EKcrest:1315380870965624995> Emirates PTFS Weekly Flight Schedule**',
+    `> **${conciseDate(new Date(`${weekStart}T00:00:00Z`))} – ${conciseDate(new Date(`${addGmtDays(weekStart, 6)}T00:00:00Z`))} **`,
+    ''
+  ];
+  const footer = [
+    '',
+    effectiveBoardUrl ? `View the live board: **${effectiveBoardUrl}**` : 'View the live board in the FIDS.',
+    '-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>'
+  ];
+
   if (!sorted.length) {
-    return {
-      embeds: [new EmbedBuilder()
-        .setTitle('Weekly Flight Schedule')
-        .setDescription('No flights are currently scheduled for this week.')
-        .setFooter({ text: 'Emirates Flight Operations' })
-        .setTimestamp()],
+    return [{
+      content: [...header, 'No flights are currently scheduled for this week.', ...footer].join('\n'),
       components: []
-    };
+    }];
   }
 
   const messages = [];
-  let current = [];
+  let lines = [...header];
   let rows = [];
 
   const flush = () => {
-    if (!current.length) return;
+    if (lines.length === header.length) return;
     messages.push({
-      embeds: [new EmbedBuilder()
-        .setTitle('Emirates PTFS — Weekly Flight Schedule')
-        .setDescription(current.join('\n\n'))
-        .setFooter({ text: 'Times are GMT / UTC · Emirates Flight Operations' })
-        .setTimestamp()],
+      content: [...lines, ...footer].join('\n'),
       components: rows
     });
-    current = [];
+    lines = [...header];
     rows = [];
   };
 
   for (const flight of sorted) {
     const time = flight.departureTime || flight.arrivalTime || '--:--';
-    const direction = flight.type === 'departure' ? 'DEP' : 'ARR';
-    const routeLabel = flight.type === 'departure' ? '→' : '←';
+    const type = flight.type === 'departure' ? 'DEP' : 'ARR';
+    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})`;
+    const candidate = [...lines, line, ...footer].join('\n');
+    if (candidate.length > 1_850 && lines.length > header.length) flush();
+    lines.push(line);
+
     const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
-    const line = `**${flight.flightNumber}** · ${flight.airline} · ${flight.date} · **${time} GMT**\n${direction} ${routeLabel} ${flight.destination} · ${flight.aircraft} · T${String(flight.terminal).replace(/^T/i, '')} · **${flight.status}**`;
-
-    if (current.length >= 10 || [...current, line].join('\n\n').length > 3800) flush();
-    current.push(line);
-
     if (eventUrl && /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl)) {
       rows.push(new ActionRowBuilder().addComponents(
         new ButtonBuilder().setLabel(`${flight.flightNumber} Event`).setStyle(ButtonStyle.Link).setURL(eventUrl)
       ));
-      if (rows.length >= 5) flush();
     }
+    if (lines.length - header.length >= 12 || rows.length >= 5) flush();
   }
   flush();
-
   return messages;
 }
 
@@ -209,6 +258,8 @@ module.exports = {
   STATUSES,
   SESSION_TTL_MS,
   weeklyFlightEmbed,
+  weeklyEventComponents,
+  weeklySummaryMessage,
   weeklyFlightListing,
   flightTypeRows,
   airlineRows,
