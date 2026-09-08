@@ -97,7 +97,7 @@ function cleanFlight(body) {
   const status = cleanText(body.status, 'Status', 40);
   if (!ALLOWED_STATUSES.has(status)) throw new Error('Status is not supported.');
 
-  const discordEvent = typeof body.discordEvent === 'string' ? body.discordEvent.trim() : '';
+  const discordEvent = typeof body.discordEvent === 'string' ? body.discordEvent.trim() : typeof body.discordEventUrl === 'string' ? body.discordEventUrl.trim() : '';
   let eventUrl = null;
   if (discordEvent) {
     try {

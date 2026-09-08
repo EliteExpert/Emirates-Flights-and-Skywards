@@ -184,3 +184,14 @@ For production, make sure only one process/service runs the bot. Do not run `nod
 This project uses npm for Railway/Railpack builds. Keep `package.json` and `package-lock.json` available; Railway's current Railpack Node provider uses `npm install` for npm projects. Do not add a `pnpm-lock.yaml` unless it is intentionally generated and kept in sync with `package.json`, because Railpack will select pnpm when that lockfile is present and may use a frozen install.
 
 The FIDS listing now shows a separate **Event** link next to the flight controls whenever `discordEvent` contains a valid Discord event URL. Flights without an event URL do not show an empty/broken event link.
+
+
+## Discord bot
+
+The project includes a native Discord.js v14 bot. Set `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID`, `WEEKLY_FLIGHT_CHANNEL_ID`, and `FIDS_API_KEY` in the deployment environment. The bot can run with the FIDS in the same process via `npm start`, or independently with `npm run bot`.
+
+The bot requires permission to view/send messages and embed links in the weekly channel, plus **Manage Events** so `/add-flight` can create a Discord Scheduled Event. The bot also needs the `applications.commands` OAuth scope. No privileged gateway intents are required.
+
+`/add-flight` creates the Discord Scheduled Event first, saves its URL through `POST /api/flights`, and shows the event link in the Discord confirmation. The weekly Discord flight listing includes a link button for each flight that has an event URL. The public FIDS website does not display Discord event links.
+
+Railway should use npm: keep `package-lock.json`, keep `pnpm-lock.yaml` out of the repository, and run `npm install` before `npm start`.

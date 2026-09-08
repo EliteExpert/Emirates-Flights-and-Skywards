@@ -1,4 +1,4 @@
-const DEFAULT_FIDS_BASE_URL = 'http://127.0.0.1:3000';
+const DEFAULT_FIDS_BASE_URL = `http://127.0.0.1:${process.env.PORT || 3000}`;
 
 function required(name) {
   const value = process.env[name]?.trim();
@@ -30,6 +30,7 @@ function getConfig({ requireDiscord = true } = {}) {
   if (requireDiscord) {
     required('DISCORD_TOKEN');
     required('DISCORD_CLIENT_ID');
+    required('DISCORD_GUILD_ID');
     required('WEEKLY_FLIGHT_CHANNEL_ID');
     required('FIDS_API_KEY');
   }

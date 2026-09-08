@@ -1,4 +1,12 @@
 const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  GuildScheduledEventEntityType,
+  GuildScheduledEventPrivacyLevel
+} = require('discord.js');
+
+const {
   flightTypeRows,
   airlineRows,
   statusRow,
@@ -96,20 +104,38 @@ async function handleModal(interaction, context) {
       return interaction.reply({ content: 'Invalid scheduled time. Use 24-hour `HH:MM` format, for example `19:30`.', ephemeral: true });
     }
 
-    const payload = {
-      type: session.flightType,
-      date: session.date,
-      flightNumber,
-      airline: session.airline,
-      ...(session.flightType === 'departure' ? { departureTime: scheduledTime } : { arrivalTime: scheduledTime }),
-      destination: route,
-      aircraft,
-      terminal,
-      status: session.status,
-      discordEvent: ''
-    };
-
+    let createdEvent = null;
     try {
+      const guild = await interaction.client.guilds.fetch(context.config.discordGuildId);
+      const scheduledStart = new Date(`${session.date}T${scheduledTime}:00Z`);
+      const scheduledEnd = new Date(scheduledStart.getTime() + 60 * 60 * 1000);
+      if (scheduledStart.getTime() <= Date.now()) {
+        return interaction.reply({ content: 'The scheduled time must be in the future so the Discord event can be created.', ephemeral: true });
+      }
+
+      createdEvent = await guild.scheduledEvents.create({
+        name: `${flightNumber} · ${session.airline}`,
+        description: `${session.flightType === 'departure' ? 'Departure' : 'Arrival'} · ${route} · ${aircraft} · Terminal ${terminal} · ${session.status}`,
+        scheduledStartTime: scheduledStart,
+        scheduledEndTime: scheduledEnd,
+        privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+        entityType: GuildScheduledEventEntityType.External,
+        entityMetadata: { location: route }
+      });
+
+      const payload = {
+        type: session.flightType,
+        date: session.date,
+        flightNumber,
+        airline: session.airline,
+        ...(session.flightType === 'departure' ? { departureTime: scheduledTime } : { arrivalTime: scheduledTime }),
+        destination: route,
+        aircraft,
+        terminal,
+        status: session.status,
+        discordEvent: createdEvent.url || ''
+      };
+
       const response = await fetch(`${context.config.fidsBaseUrl}/api/flights`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-FIDS-Key': context.config.fidsApiKey },
@@ -119,14 +145,20 @@ async function handleModal(interaction, context) {
       let result;
       try { result = body ? JSON.parse(body) : null; } catch { result = null; }
       if (!response.ok || !result?.flight) {
+        if (createdEvent) await createdEvent.delete().catch(() => {});
         console.error('[Discord] FIDS API rejected flight submission:', response.status, result?.error || 'Invalid API response');
         return interaction.reply({ content: 'The FIDS rejected this flight submission. Check the details and try again. If the problem continues, contact an administrator.', ephemeral: true });
       }
       context.sessions.delete(interaction.user.id);
-      return interaction.reply({ embeds: [confirmationEmbed(result.flight)], ephemeral: true });
+      return interaction.reply({
+        embeds: [confirmationEmbed(result.flight)],
+        components: createdEvent?.url ? [new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel('View Discord Event').setStyle(ButtonStyle.Link).setURL(createdEvent.url))] : [],
+        ephemeral: true
+      });
     } catch (error) {
-      console.error('[Discord] FIDS API request failed:', error);
-      return interaction.reply({ content: 'I could not reach the FIDS server. Please try again later.', ephemeral: true });
+      if (createdEvent) await createdEvent.delete().catch(() => {});
+      console.error('[Discord] Flight submission failed:', error);
+      return interaction.reply({ content: 'I could not complete the flight submission. The Discord event was not kept. Please try again later.', ephemeral: true });
     }
   }
 
