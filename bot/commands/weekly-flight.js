@@ -1,5 +1,4 @@
 const { PermissionFlagsBits } = require('discord.js');
-const { weeklyFlightEmbed, weeklyFlightListing } = require('../flight-ui');
 const { listFlights } = require('../api');
 
 const data = {

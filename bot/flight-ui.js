@@ -1,10 +1,16 @@
+const path = require('path');
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ContainerBuilder,
   EmbedBuilder,
+  MessageFlags,
+  SeparatorBuilder,
   StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder
+  StringSelectMenuOptionBuilder,
+  TextDisplayBuilder
 } = require('discord.js');
 
 const STATUSES = [
@@ -82,57 +88,73 @@ function weeklyFlightListing(flights, weekStart = currentGmtWeekStart(), boardUr
     return ad.localeCompare(bd);
   });
 
-  const effectiveBoardUrl = boardUrl || null;
-  const header = [
-    '**<:EKcrest:1315380870965624995> Emirates PTFS Weekly Flight Schedule**',
-    `> **${conciseDate(new Date(`${weekStart}T00:00:00Z`))} – ${conciseDate(new Date(`${addGmtDays(weekStart, 6)}T00:00:00Z`))} **`,
-    ''
-  ];
-  const footer = [
-    '',
-    effectiveBoardUrl ? `View the live board: **${effectiveBoardUrl}**` : 'View the live board in the FIDS.',
-    '-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>'
-  ];
+  const headerText = `**<:EKcrest:1315380870965624995> Emirates PTFS Weekly Flight Schedule**\n> **${conciseDate(new Date(`${weekStart}T00:00:00Z`))} – ${conciseDate(new Date(`${addGmtDays(weekStart, 6)}T00:00:00Z`))}**`;
+  const footerText = `${boardUrl ? `View the live board: **${boardUrl}**` : 'View the live board in the FIDS.'}\n-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>`;
 
-  if (!sorted.length) {
-    return [{
-      content: [...header, 'No flights are currently scheduled for this week.', ...footer].join('\n'),
-      components: []
-    }];
-  }
+  const makeContainerMessage = (flightChunk) => {
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerText));
 
-  const messages = [];
-  let lines = [...header];
-  let rows = [];
+    if (!flightChunk.length) {
+      container.addTextDisplayComponents(new TextDisplayBuilder().setContent('No flights are currently scheduled for this week.'));
+    } else {
+      flightChunk.forEach((flight, index) => {
+        if (index > 0) container.addSeparatorComponents(new SeparatorBuilder());
 
-  const flush = () => {
-    if (lines.length === header.length) return;
-    messages.push({
-      content: [...lines, ...footer].join('\n'),
-      components: rows
-    });
-    lines = [...header];
-    rows = [];
+        const time = flight.departureTime || flight.arrivalTime || '--:--';
+        const type = flight.type === 'departure' ? 'DEP' : 'ARR';
+        const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
+        const safeEventUrl = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? eventUrl : '';
+        const eventLink = safeEventUrl ? ` · [Event ↗](${safeEventUrl})` : '';
+        const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
+
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(line));
+      });
+    }
+
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(footerText));
+
+    return {
+      flags: MessageFlags.IsComponentsV2,
+      components: [container]
+    };
   };
 
-  for (const flight of sorted) {
-    const time = flight.departureTime || flight.arrivalTime || '--:--';
-    const type = flight.type === 'departure' ? 'DEP' : 'ARR';
-    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})`;
-    const candidate = [...lines, line, ...footer].join('\n');
-    if (candidate.length > 1_850 && lines.length > header.length) flush();
-    lines.push(line);
+  if (!sorted.length) return [makeContainerMessage([])];
 
-    const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
-    if (eventUrl && /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl)) {
-      rows.push(new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel(`${flight.flightNumber} Event`).setStyle(ButtonStyle.Link).setURL(eventUrl)
-      ));
+  const messages = [];
+  let chunk = [];
+  for (const flight of sorted) {
+    const candidate = [...chunk, flight];
+    const estimated = headerText.length + footerText.length + candidate.reduce((total, item) => {
+      const time = item.departureTime || item.arrivalTime || '--:--';
+      const type = item.type === 'departure' ? 'DEP' : 'ARR';
+      const eventUrl = typeof item.discordEvent === 'string' ? item.discordEvent.trim() : '';
+      const eventLink = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? ` · [Event ↗](${eventUrl})` : '';
+      return total + `• ${conciseDate(new Date(`${item.date}T00:00:00Z`))} · **${time} GMT** · ${item.flightNumber} · ${item.destination} (${type})${eventLink}`.length + 4;
+    }, 0);
+
+    if (chunk.length && estimated > 3_700) {
+      messages.push(makeContainerMessage(chunk));
+      chunk = [flight];
+    } else {
+      chunk = candidate;
     }
-    if (lines.length - header.length >= 12 || rows.length >= 5) flush();
   }
-  flush();
+  if (chunk.length) messages.push(makeContainerMessage(chunk));
   return messages;
+}
+
+function weeklyAnnouncementMessages(flights, weekStart = currentGmtWeekStart(), boardUrl = null) {
+  const messages = weeklyFlightListing(flights, weekStart, boardUrl);
+  const headerImagePath = path.join(__dirname, '..', 'public', 'weekly-header.png');
+  const footerImagePath = path.join(__dirname, '..', 'public', 'weekly-footer.png');
+  return {
+    header: { files: [{ attachment: headerImagePath, name: 'weekly-header.png' }] },
+    containers: messages,
+    footer: { files: [{ attachment: footerImagePath, name: 'weekly-footer.png' }] }
+  };
 }
 
 function flightTypeRows() {
@@ -261,6 +283,7 @@ module.exports = {
   weeklyEventComponents,
   weeklySummaryMessage,
   weeklyFlightListing,
+  weeklyAnnouncementMessages,
   flightTypeRows,
   airlineRows,
   statusRow,

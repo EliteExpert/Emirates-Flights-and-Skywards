@@ -1,5 +1,5 @@
 const { listFlights, weeklyFlights } = require('../api');
-const { weeklyFlightListing } = require('../flight-ui');
+const { weeklyFlightListing, weeklyAnnouncementMessages } = require('../flight-ui');
 
 const data = {
   name: 'flights',
@@ -22,9 +22,10 @@ async function execute(interaction) {
 
     if (isWeekly) {
       const summary = await weeklyFlights();
-      const messages = weeklyFlightListing(summary.flights, summary.weekStart);
-      await interaction.editReply(messages[0]);
-      for (const message of messages.slice(1)) await interaction.followUp({ ...message, ephemeral: true });
+      const announcement = weeklyAnnouncementMessages(summary.flights, summary.weekStart);
+      await interaction.editReply(announcement.header);
+      for (const message of announcement.containers) await interaction.followUp({ ...message, ephemeral: true });
+      await interaction.followUp({ ...announcement.footer, ephemeral: true });
       return;
     }
 
@@ -33,8 +34,7 @@ async function execute(interaction) {
     if (type) flights = flights.filter((flight) => flight.type === type);
 
     const messages = weeklyFlightListing(flights, date || undefined);
-    const label = date || (type === 'departure' ? 'Departures' : 'Arrivals');
-    await interaction.editReply({ content: `**${label}**\n${messages[0].content}`, components: messages[0].components });
+    await interaction.editReply(messages[0]);
     for (const message of messages.slice(1)) await interaction.followUp({ ...message, ephemeral: true });
   } catch (error) {
     console.error('[Discord] /flights failed:', error);
