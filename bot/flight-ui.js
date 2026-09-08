@@ -8,6 +8,8 @@ const {
   EmbedBuilder,
   MediaGalleryBuilder,
   MessageFlags,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder
@@ -82,7 +84,7 @@ function flightListingMessage(flights, title = 'Emirates PTFS Flight Schedule') 
   };
 }
 
-function weeklyAnnouncementMessage(flights, weekStart = currentGmtWeekStart(), boardUrl = null) {
+function weeklyAnnouncementMessage(flights, weekStart = currentGmtWeekStart(), boardUrl = 'https://emirates-ptfs-fids.onrender.com/departures') {
   const dateFormat = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
     weekday: 'short',
@@ -101,48 +103,58 @@ function weeklyAnnouncementMessage(flights, weekStart = currentGmtWeekStart(), b
     `> **${conciseDate(new Date(`${weekStart}T00:00:00Z`))} – ${conciseDate(new Date(`${addGmtDays(weekStart, 6)}T00:00:00Z`))}**`,
   ].join('\n');
 
-  const flightLines = sorted.length
-    ? sorted.map((flight) => {
-        const time = flight.departureTime || flight.arrivalTime || '--:--';
-        const type = flight.type === 'departure' ? 'DEP' : 'ARR';
-        const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
-        const safeEventUrl = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? eventUrl : '';
-        const eventLink = safeEventUrl ? ` · [Event ↗](${safeEventUrl})` : '';
-        return `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
-      }).join('\n────────────────────────\n')
-    : 'No flights are currently scheduled for this week.';
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerText));
 
-  const footerText = `${boardUrl ? `View the live board: **${boardUrl}**` : 'View the live board in the FIDS.'}\n-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>`;
+  if (!sorted.length) {
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('No flights are currently scheduled for this week.')
+    );
+  } else {
+    const MAX_TEXT_DISPLAY = 3900;
+    for (let index = 0; index < sorted.length; index += 1) {
+      const flight = sorted[index];
+      const time = flight.departureTime || flight.arrivalTime || '--:--';
+      const type = flight.type === 'departure' ? 'DEP' : 'ARR';
+      const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
+      const safeEventUrl = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? eventUrl : '';
+      const eventLink = safeEventUrl ? ` · [Event link ↗](${safeEventUrl})` : '';
+      const flightText = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
 
-  const scheduleText = [flightLines, '', footerText].join('\n');
+      // Each flight is its own TextDisplay so native Components V2 separators can sit between them.
+      // Keep individual TextDisplay payloads below Discord's content limit.
+      for (let offset = 0; offset < flightText.length; offset += MAX_TEXT_DISPLAY) {
+        const chunk = flightText.slice(offset, offset + MAX_TEXT_DISPLAY);
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(chunk));
+      }
 
-  // Keep the entire middle section inside one Components V2 Container.
-  // No accent/embed color is set, so the container uses Discord's default appearance.
-  // Split only when necessary to stay under Discord's TextDisplay content limit;
-  // the message itself remains a single message and the container remains one container.
-  const MAX_TEXT_DISPLAY = 3900;
-  const textParts = [];
-  let remaining = `${headerText}\n\n${scheduleText}`;
-  while (remaining.length > MAX_TEXT_DISPLAY) {
-    let cut = remaining.lastIndexOf('\n', MAX_TEXT_DISPLAY);
-    if (cut < 1) cut = MAX_TEXT_DISPLAY;
-    textParts.push(remaining.slice(0, cut));
-    remaining = remaining.slice(cut + 1);
+      if (index < sorted.length - 1) {
+        container.addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(true)
+            .setSpacing(SeparatorSpacingSize.Small)
+        );
+      }
+    }
   }
-  if (remaining) textParts.push(remaining);
 
-  const container = new ContainerBuilder();
-  for (const part of textParts) {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(part));
-  }
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setDivider(true)
+      .setSpacing(SeparatorSpacingSize.Small)
+  );
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `[View the live board in the FIDS ↗](${boardUrl})\n-# <:Emiratesnewtail:1480910652427079680> **Fly Emirates** <@&1295727684806115328>`
+    )
+  );
 
   return {
     flags: MessageFlags.IsComponentsV2,
     components: [container]
   };
 }
-
-function weeklyAnnouncementMessages(flights, weekStart = currentGmtWeekStart(), boardUrl = null) {
+function weeklyAnnouncementMessages(flights, weekStart = currentGmtWeekStart(), boardUrl = 'https://emirates-ptfs-fids.onrender.com/departures') {
   const announcement = weeklyAnnouncementMessage(flights, weekStart, boardUrl);
   const headerImagePath = path.join(__dirname, '..', 'public', 'weekly-header.png');
   const footerImagePath = path.join(__dirname, '..', 'public', 'weekly-footer.png');
