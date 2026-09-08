@@ -61,7 +61,8 @@ function flightCard(flight, index) {
   const scheduledTime = displayTime.format(scheduledDate);
   const isDeparture = page === 'departures';
   const live = timing(flight);
-  const eventUrl = escapeHtml(flight.discordEvent);
+  const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
+  const safeEventUrl = escapeHtml(eventUrl);
   return `
     <article class="flight-card" style="animation-delay:${Math.min(index * 45, 360)}ms">
       <div class="time">
@@ -76,7 +77,7 @@ function flightCard(flight, index) {
       <div class="cell aircraft-cell"><span class="cell-label">Aircraft</span><span class="cell-value">${escapeHtml(flight.aircraft)}</span></div>
       <div class="cell terminal-cell"><span class="cell-label">Terminal</span><span class="terminal">${escapeHtml(flight.terminal)}</span></div>
       <span class="status ${statusClass(live.status)}">${escapeHtml(live.status)}</span>
-      <button class="details-button" type="button" data-event-url="${eventUrl}">Flight Details <img class="details-icon" src="/external-link-icon.png" alt="" /></button>
+      <button class="details-button" type="button" data-event-url="${safeEventUrl}">Flight Details <img class="details-icon" src="/external-link-icon.png" alt="" /></button>
     </article>`;
 }
 

@@ -8,7 +8,7 @@ const {
 } = require('discord.js');
 const { getConfig } = require('./config');
 const { startWeeklyScheduler } = require('./scheduler');
-const { weeklyFlightEmbed } = require('./flight-ui');
+const { weeklyFlightEmbed, weeklyFlightListing } = require('./flight-ui');
 const addFlight = require('./commands/add-flight');
 const weeklyFlight = require('./commands/weekly-flight');
 
@@ -43,9 +43,30 @@ async function startBot() {
     }, 60_000);
     sessionCleanup.unref?.();
 
+    const fetchWeeklyFlights = async () => {
+      const response = await fetch(`${config.fidsBaseUrl}/api/flights`);
+      const body = await response.text();
+      let flights;
+      try { flights = body ? JSON.parse(body) : []; } catch { flights = []; }
+      if (!response.ok || !Array.isArray(flights)) throw new Error('FIDS flight listing could not be loaded.');
+
+      const now = new Date();
+      const day = now.getUTCDay();
+      const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - day));
+      const end = new Date(start);
+      end.setUTCDate(end.getUTCDate() + 6);
+      const startDate = start.toISOString().slice(0, 10);
+      const endDate = end.toISOString().slice(0, 10);
+      return flights.filter((flight) => flight.date >= startDate && flight.date <= endDate);
+    };
+
     const postWeeklyMessage = async (channel) => {
       if (!channel?.isTextBased?.()) throw new Error('Weekly flight channel is unavailable or not text-based.');
+      const flights = await fetchWeeklyFlights();
       await channel.send({ embeds: [weeklyFlightEmbed()] });
+      for (const message of weeklyFlightListing(flights)) {
+        await channel.send(message);
+      }
     };
 
     client.once(Events.ClientReady, async (readyClient) => {

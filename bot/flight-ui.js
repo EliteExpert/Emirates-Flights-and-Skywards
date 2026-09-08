@@ -28,6 +28,64 @@ function weeklyFlightEmbed() {
     .setTimestamp();
 }
 
+function weeklyFlightListing(flights) {
+  const sorted = [...flights].sort((a, b) => {
+    const ad = `${a.date}T${a.departureTime || a.arrivalTime || '00:00'}:00Z`;
+    const bd = `${b.date}T${b.departureTime || b.arrivalTime || '00:00'}:00Z`;
+    return ad.localeCompare(bd);
+  });
+
+  if (!sorted.length) {
+    return {
+      embeds: [new EmbedBuilder()
+        .setTitle('Weekly Flight Schedule')
+        .setDescription('No flights are currently scheduled for this week.')
+        .setFooter({ text: 'Emirates PTFS · Flight Information Display System' })
+        .setTimestamp()],
+      components: []
+    };
+  }
+
+  const messages = [];
+  let current = [];
+  let rows = [];
+
+  const flush = () => {
+    if (!current.length) return;
+    messages.push({
+      embeds: [new EmbedBuilder()
+        .setTitle('Emirates PTFS — Weekly Flight Schedule')
+        .setDescription(current.join('\n\n'))
+        .setFooter({ text: 'Times are GMT / UTC · Emirates PTFS FIDS' })
+        .setTimestamp()],
+      components: rows
+    });
+    current = [];
+    rows = [];
+  };
+
+  for (const flight of sorted) {
+    const time = flight.departureTime || flight.arrivalTime || '--:--';
+    const direction = flight.type === 'departure' ? 'DEP' : 'ARR';
+    const routeLabel = flight.type === 'departure' ? '→' : '←';
+    const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
+    const line = `**${flight.flightNumber}** · ${flight.airline} · ${flight.date} · **${time} GMT**\n${direction} ${routeLabel} ${flight.destination} · ${flight.aircraft} · T${String(flight.terminal).replace(/^T/i, '')} · **${flight.status}**`;
+
+    if (current.length >= 10 || [...current, line].join('\n\n').length > 3800) flush();
+    current.push(line);
+
+    if (eventUrl && /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl)) {
+      rows.push(new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel(`${flight.flightNumber} Event`).setStyle(ButtonStyle.Link).setURL(eventUrl)
+      ));
+      if (rows.length >= 5) flush();
+    }
+  }
+  flush();
+
+  return messages;
+}
+
 function flightTypeRows() {
   return [new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('add-flight:type:departure').setLabel('Departure').setStyle(ButtonStyle.Primary),
@@ -151,6 +209,7 @@ module.exports = {
   STATUSES,
   SESSION_TTL_MS,
   weeklyFlightEmbed,
+  weeklyFlightListing,
   flightTypeRows,
   airlineRows,
   statusRow,

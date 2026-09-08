@@ -178,3 +178,9 @@ The native scheduler explicitly works in UTC. It calculates the next Sunday at `
 The existing `npm start` command remains the FIDS entry point. When `DISCORD_TOKEN` is configured, `server.js` starts the Discord bot after Express starts. This allows a single Node service to host both components. On Render, add the Discord variables to the existing web service environment; the provided `render.yaml` contains placeholders for them.
 
 For production, make sure only one process/service runs the bot. Do not run `node bot/index.js` separately on the same deployment if `DISCORD_TOKEN` is also configured for combined startup.
+
+### Railway deployment
+
+This project uses npm for Railway/Railpack builds. Keep `package.json` and `package-lock.json` available; Railway's current Railpack Node provider uses `npm install` for npm projects. Do not add a `pnpm-lock.yaml` unless it is intentionally generated and kept in sync with `package.json`, because Railpack will select pnpm when that lockfile is present and may use a frozen install.
+
+The FIDS listing now shows a separate **Event** link next to the flight controls whenever `discordEvent` contains a valid Discord event URL. Flights without an event URL do not show an empty/broken event link.

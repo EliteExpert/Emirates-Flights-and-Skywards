@@ -59,7 +59,7 @@ h1 { margin: 0; font-family: "Emirates Medium", Arial, sans-serif; font-size: cl
 .date-group { margin-top: 29px; animation: reveal .38s ease both; }
 .date-heading { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; color: #55595f; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .date-heading::after { content: ""; height: 1px; flex: 1; background: var(--line); }
-.flight-card { display: grid; grid-template-columns: 108px minmax(155px, 1.1fr) minmax(180px, 1.7fr) minmax(125px, 1.1fr) 58px 122px 132px; align-items: center; gap: 16px; margin-top: 10px; padding: 21px 20px; border: 1px solid #e9eaeb; border-radius: 16px; background: var(--white); box-shadow: 0 6px 19px rgb(26 31 36 / .055); animation: reveal .42s ease both; transition: transform .2s ease, box-shadow .2s ease; }
+.flight-card { display: grid; grid-template-columns: 108px minmax(155px, 1.1fr) minmax(180px, 1.7fr) minmax(125px, 1.1fr) 58px 122px 122px 132px; align-items: center; gap: 16px; margin-top: 10px; padding: 21px 20px; border: 1px solid #e9eaeb; border-radius: 16px; background: var(--white); box-shadow: 0 6px 19px rgb(26 31 36 / .055); animation: reveal .42s ease both; transition: transform .2s ease, box-shadow .2s ease; }
 .flight-card:hover { z-index: 1; transform: translateY(-3px); box-shadow: 0 12px 28px rgb(26 31 36 / .1); }
 .time { display: flex; flex-direction: column; gap: 5px; font-size: 24px; font-weight: 700; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .time > time { font-family: "Emirates Medium", Arial, sans-serif; }
