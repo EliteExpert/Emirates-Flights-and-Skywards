@@ -1,0 +1,32 @@
+<main class="shell">
+  <header class="masthead">
+    <a href="/departures" class="brand" aria-label="Emirates PTFS home">
+      <img class="brand-tail" src="/emirates-tail.png" alt="" />
+      <span class="emirates-wordmark">EMIRATES <small>PTFS</small></span>
+    </a>
+    <p class="airport-label">Flight Information Display</p>
+  </header>
+
+  <section class="hero" aria-labelledby="page-title">
+    <div>
+      <p class="eyebrow">Dubai · UAE</p>
+      <h1 id="page-title"><%= activePage === 'departures' ? 'Departures' : 'Arrivals' %></h1>
+      <p class="intro" id="page-intro"><%= activePage === 'departures' ? 'Your next journey begins here.' : 'Welcome to Dubai. Track your arriving flight.' %></p>
+    </div>
+    <div class="flip-clock" id="live-clock" aria-label="Current local time" role="timer"></div>
+  </section>
+
+  <nav class="tabs" aria-label="Flight information">
+    <a class="tab <%= activePage === 'departures' ? 'is-active' : '' %>" data-view="departures" href="/departures"><img class="tab-icon" src="/departures-icon.png" alt="" />Departures</a>
+    <a class="tab <%= activePage === 'arrivals' ? 'is-active' : '' %>" data-view="arrivals" href="/arrivals"><img class="tab-icon" src="/arrivals-icon.png" alt="" />Arrivals</a>
+  </nav>
+
+  <section class="flight-panel" aria-label="Flight search and results">
+    <label class="search" for="flight-search">
+      <span aria-hidden="true">⌕</span>
+      <input id="flight-search" type="search" placeholder="Search by flight number, destination or aircraft" autocomplete="off" />
+    </label>
+    <p class="result-count" id="result-count" aria-live="polite"></p>
+    <div id="flight-list" class="flight-list" aria-live="polite"></div>
+  </section>
+</main>

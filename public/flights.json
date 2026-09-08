@@ -1,0 +1,122 @@
+[
+  {
+    "type": "departure",
+    "date": "2026-07-27",
+    "flightNumber": "EK247",
+    "airline": "Emirates PTFS",
+    "departureTime": "19:30",
+    "destination": "London Heathrow (LHR)",
+    "aircraft": "A350-900",
+    "terminal": "T3",
+    "status": "Boarding",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "departure",
+    "date": "2026-07-27",
+    "flightNumber": "FZ042",
+    "airline": "flydubai PTFS",
+    "departureTime": "20:05",
+    "destination": "Muscat (MCT)",
+    "aircraft": "Boeing 737 MAX 8",
+    "terminal": "T2",
+    "status": "Boarding",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "departure",
+    "date": "2026-07-27",
+    "flightNumber": "EK202",
+    "airline": "Emirates PTFS",
+    "departureTime": "21:10",
+    "destination": "New York (JFK)",
+    "aircraft": "Boeing 777-300ER",
+    "terminal": "T3",
+    "status": "Check-in Open",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "departure",
+    "date": "2026-07-28",
+    "flightNumber": "EK412",
+    "airline": "Emirates PTFS",
+    "departureTime": "02:45",
+    "destination": "Sydney (SYD)",
+    "aircraft": "A380-800",
+    "terminal": "T3",
+    "status": "Final Call",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "departure",
+    "date": "2026-07-28",
+    "flightNumber": "EK531",
+    "airline": "Emirates PTFS",
+    "departureTime": "08:15",
+    "destination": "Kochi (COK)",
+    "aircraft": "Boeing 777-200LR",
+    "terminal": "T3",
+    "status": "Check-in Open",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "arrival",
+    "date": "2026-07-27",
+    "flightNumber": "EK248",
+    "airline": "Emirates PTFS",
+    "arrivalTime": "18:55",
+    "destination": "London Heathrow (LHR)",
+    "aircraft": "A350-900",
+    "terminal": "T3",
+    "status": "Arrived",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "arrival",
+    "date": "2026-07-27",
+    "flightNumber": "FZ041",
+    "airline": "flydubai PTFS",
+    "arrivalTime": "18:40",
+    "destination": "Muscat (MCT)",
+    "aircraft": "Boeing 737 MAX 8",
+    "terminal": "T2",
+    "status": "In Flight",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "arrival",
+    "date": "2026-07-27",
+    "flightNumber": "EK203",
+    "airline": "Emirates PTFS",
+    "arrivalTime": "20:20",
+    "destination": "New York (JFK)",
+    "aircraft": "Boeing 777-300ER",
+    "terminal": "T3",
+    "status": "In Flight",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "arrival",
+    "date": "2026-07-28",
+    "flightNumber": "EK413",
+    "airline": "Emirates PTFS",
+    "arrivalTime": "00:55",
+    "destination": "Sydney (SYD)",
+    "aircraft": "A380-800",
+    "terminal": "T3",
+    "status": "In Flight",
+    "discordEvent": "https://discord.com/events/server/event"
+  },
+  {
+    "type": "arrival",
+    "date": "2026-07-28",
+    "flightNumber": "EK532",
+    "airline": "Emirates PTFS",
+    "arrivalTime": "09:20",
+    "destination": "Kochi (COK)",
+    "aircraft": "Boeing 777-200LR",
+    "terminal": "T3",
+    "status": "In Flight",
+    "discordEvent": "https://discord.com/events/server/event"
+  }
+]

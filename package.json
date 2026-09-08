@@ -1,0 +1,16 @@
+{
+  "name": "emirates-ptfs-fids",
+  "version": "1.0.0",
+  "description": "Emirates PTFS flight information display system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "bot": "node bot/index.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "discord.js": "^14.27.0"
+  }
+}
