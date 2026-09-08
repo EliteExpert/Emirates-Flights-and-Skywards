@@ -34,30 +34,51 @@ async function listFlights() {
   return body;
 }
 
+function addGmtDays(date, days) {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function currentGmtWeekStart() {
+  const now = new Date();
+  const sunday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay()));
+  return sunday.toISOString().slice(0, 10);
+}
+
+// Mirrors server.js: current Sunday through Saturday in GMT/UTC,
+// with chronological flight ordering.
+async function weeklyFlights() {
+  const weekStart = currentGmtWeekStart();
+  const weekEnd = addGmtDays(weekStart, 6);
+  const flights = (await listFlights())
+    .filter((flight) => flight.date >= weekStart && flight.date <= weekEnd)
+    .sort((a, b) => {
+      const at = `${a.date}T${a.departureTime || a.arrivalTime || '00:00'}:00Z`;
+      const bt = `${b.date}T${b.departureTime || b.arrivalTime || '00:00'}:00Z`;
+      return at.localeCompare(bt);
+    });
+  return { weekStart, weekEnd, totalFlights: flights.length, flights };
+}
+
 async function weeklySummary() {
-  const body = await request('/api/flights/weekly-summary');
-  if (!body || typeof body !== 'object' || !Array.isArray(body.flights)) {
-    throw new Error('Flight service returned an invalid weekly schedule.');
+  try {
+    const body = await request('/api/flights/weekly-summary');
+    if (body && typeof body === 'object' && Array.isArray(body.flights) && typeof body.message === 'string') return body;
+  } catch (error) {
+    console.warn(`[Discord] Weekly-summary endpoint unavailable (${error.status || 'request error'}); using /api/flights fallback.`);
   }
-  return body;
+  return weeklyFlights();
 }
 
 async function createFlight(flight) {
   return request('/api/flights', { method: 'POST', body: JSON.stringify(flight) });
 }
-
 async function updateStatus(identity, status) {
-  return request('/api/flights/status', {
-    method: 'POST',
-    body: JSON.stringify({ ...identity, status })
-  });
+  return request('/api/flights/status', { method: 'POST', body: JSON.stringify({ ...identity, status }) });
 }
-
 async function removeFlight(identity) {
-  return request('/api/flights/remove', {
-    method: 'POST',
-    body: JSON.stringify(identity)
-  });
+  return request('/api/flights/remove', { method: 'POST', body: JSON.stringify(identity) });
 }
 
-module.exports = { request, listFlights, weeklySummary, createFlight, updateStatus, removeFlight };
+module.exports = { request, listFlights, weeklyFlights, weeklySummary, createFlight, updateStatus, removeFlight };

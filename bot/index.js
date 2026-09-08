@@ -8,8 +8,8 @@ const {
 } = require('discord.js');
 const { getConfig } = require('./config');
 const { startWeeklyScheduler } = require('./scheduler');
-const { weeklySummary } = require('./api');
-const { weeklyFlightEmbed, weeklySummaryMessage } = require('./flight-ui');
+const { weeklyFlights } = require('./api');
+const { weeklyFlightEmbed, weeklyFlightListing } = require('./flight-ui');
 const addFlight = require('./commands/add-flight');
 const weeklyFlight = require('./commands/weekly-flight');
 const flightsCommand = require('./commands/flights');
@@ -49,9 +49,10 @@ async function startBot() {
 
     const postWeeklyMessage = async (channel) => {
       if (!channel?.isTextBased?.()) throw new Error('Weekly flight channel is unavailable or not text-based.');
-      const summary = await weeklySummary();
+      const summary = await weeklyFlights();
+      const messages = weeklyFlightListing(summary.flights, summary.weekStart);
       await channel.send({ embeds: [weeklyFlightEmbed()] });
-      await channel.send(weeklySummaryMessage(summary));
+      for (const message of messages) await channel.send(message);
     };
 
     client.once(Events.ClientReady, async (readyClient) => {
