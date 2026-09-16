@@ -144,6 +144,19 @@ function currentGmtWeekStart() {
   return sunday.toISOString().slice(0, 10);
 }
 
+// Discord custom emoji shown before a flight's number, keyed by the IATA
+// airline code the flight number starts with (EK247, FZ123, ...).
+const AIRLINE_EMOJIS = {
+  EK: '<:Emiratesnewtail:1480910652427079680>',
+  FZ: '<:flydubai:1531904943001440338>'
+};
+
+function airlineEmoji(flightNumber) {
+  const prefix = String(flightNumber || '').trim().toUpperCase().match(/^[A-Z]{2}/);
+  const emoji = prefix && AIRLINE_EMOJIS[prefix[0]];
+  return emoji ? `${emoji} ` : '';
+}
+
 function weeklyDiscordMessage(flights, weekStart, boardUrl) {
   const dateFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
   const conciseDate = (date) => dateFormat.format(date).replace(',', '');
@@ -157,7 +170,7 @@ function weeklyDiscordMessage(flights, weekStart, boardUrl) {
   for (const flight of flights) {
     const time = flight.departureTime || flight.arrivalTime;
     const type = flight.type === 'departure' ? 'DEP' : 'ARR';
-    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})`;
+    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${airlineEmoji(flight.flightNumber)}${flight.flightNumber} · ${flight.destination} (${type})`;
     if ([...lines, line, '', `View the live board: ${boardUrl}`].join('\n').length > 1_850) {
       omitted += 1;
     } else {
