@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const { listFlights, weeklyFlights } = require('../api');
 const { flightListingMessage, weeklyAnnouncementMessages } = require('../flight-ui');
 
@@ -13,7 +14,7 @@ const data = {
 };
 
 async function execute(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const date = interaction.options.getString('date');
     const type = interaction.options.getString('type');
@@ -23,7 +24,11 @@ async function execute(interaction) {
     if (isWeekly) {
       const summary = await weeklyFlights();
       const announcement = weeklyAnnouncementMessages(summary.flights, summary.weekStart);
-      await interaction.editReply({ ...announcement.message, files: announcement.files });
+      const [first, ...rest] = announcement.messages;
+      await interaction.editReply(first);
+      for (const payload of rest) {
+        await interaction.followUp({ ...payload, flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral });
+      }
       return;
     }
 

@@ -71,6 +71,22 @@ async function weeklySummary() {
   return weeklyFlights();
 }
 
+// Returns true/false when the FIDS tracks announcements, or null when the
+// marker store is unavailable (no Supabase) so callers can skip catch-up.
+async function getWeeklyAnnouncementStatus(week) {
+  try {
+    const body = await request(`/api/weekly-announcement?week=${encodeURIComponent(week)}`);
+    if (body && typeof body.posted === 'boolean') return body.posted;
+  } catch (error) {
+    console.warn(`[Discord] Weekly-announcement status unavailable (${error.status || 'request error'}).`);
+  }
+  return null;
+}
+
+async function markWeeklyAnnouncementPosted(week) {
+  await request('/api/weekly-announcement', { method: 'POST', body: JSON.stringify({ week }) });
+}
+
 async function createFlight(flight) {
   return request('/api/flights', { method: 'POST', body: JSON.stringify(flight) });
 }
@@ -81,4 +97,15 @@ async function removeFlight(identity) {
   return request('/api/flights/remove', { method: 'POST', body: JSON.stringify(identity) });
 }
 
-module.exports = { request, listFlights, weeklyFlights, weeklySummary, createFlight, updateStatus, removeFlight };
+module.exports = {
+  request,
+  listFlights,
+  weeklyFlights,
+  weeklySummary,
+  currentGmtWeekStart,
+  getWeeklyAnnouncementStatus,
+  markWeeklyAnnouncementPosted,
+  createFlight,
+  updateStatus,
+  removeFlight
+};

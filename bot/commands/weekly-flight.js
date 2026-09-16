@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { MessageFlags, PermissionFlagsBits } = require('discord.js');
 
 const data = {
   name: 'weekly-flight',
@@ -7,14 +7,14 @@ const data = {
 };
 
 async function execute(interaction, { config, postWeeklyMessage }) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to use this command.', ephemeral: true });
-  if (interaction.channelId !== config.weeklyFlightChannelId) return interaction.reply({ content: 'This command can only be used in the configured flight channel.', ephemeral: true });
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to use this command.', flags: MessageFlags.Ephemeral });
+  if (interaction.channelId !== config.weeklyFlightChannelId) return interaction.reply({ content: 'This command can only be used in the configured flight channel.', flags: MessageFlags.Ephemeral });
   try {
     await postWeeklyMessage(interaction.channel);
-    return interaction.reply({ content: 'The current flight schedule has been published.', ephemeral: true });
+    return interaction.reply({ content: 'The current flight schedule has been published.', flags: MessageFlags.Ephemeral });
   } catch (error) {
     console.error('[Discord] /weekly-flight failed:', error);
-    return interaction.reply({ content: 'I could not publish the flight schedule right now.', ephemeral: true });
+    return interaction.reply({ content: 'I could not publish the flight schedule right now.', flags: MessageFlags.Ephemeral });
   }
 }
 
