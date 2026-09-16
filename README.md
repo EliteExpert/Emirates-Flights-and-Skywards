@@ -175,6 +175,8 @@ Because Render web services sleep when idle and Railway redeploys restart the pr
 
 Schedules with more than 15 flights are split across multiple messages ("Part 1 of N"), because Discord caps Components V2 messages at 40 components.
 
+Flight lines are prefixed with the airline's Discord emoji based on the flight number's airline code: EK → `<:Emiratesnewtail:1480910652427079680>` and FZ → `<:flydubai:1531904943001440338>`. Other airlines show no badge.
+
 `/weekly-flight` posts the same announcement manually, but only in the configured weekly channel and for users with Manage Server permission.
 
 ### Combined deployment

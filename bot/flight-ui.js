@@ -23,6 +23,19 @@ const STATUSES = [
 const AIRLINES = ['Emirates', 'Etihad Airways', 'Qatar Airways'];
 const SESSION_TTL_MS = 10 * 60 * 1000;
 
+// Discord custom emoji shown before a flight's number, keyed by the IATA
+// airline code the flight number starts with (EK247, FZ123, ...).
+const AIRLINE_EMOJIS = {
+  EK: '<:Emiratesnewtail:1480910652427079680>',
+  FZ: '<:flydubai:1531904943001440338>'
+};
+
+function airlineEmoji(flightNumber) {
+  const prefix = String(flightNumber || '').trim().toUpperCase().match(/^[A-Z]{2}/);
+  const emoji = prefix && AIRLINE_EMOJIS[prefix[0]];
+  return emoji ? `${emoji} ` : '';
+}
+
 function weeklyFlightEmbed() {
   return new EmbedBuilder()
     .setTitle('Weekly Flight Schedule — Submissions Open')
@@ -70,7 +83,7 @@ function flightListingMessage(flights, title = 'Emirates PTFS Flight Schedule') 
         const eventLink = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl)
           ? ` · [Event ↗](${eventUrl})`
           : '';
-        return `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
+        return `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${airlineEmoji(flight.flightNumber)}${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
       }).join('\n────────────────────────\n')
     : 'No flights match the selected filters.';
 
@@ -127,7 +140,7 @@ function weeklyAnnouncementContainer(flights, weekStart, boardUrl, partLabel) {
       const eventUrl = typeof flight.discordEvent === 'string' ? flight.discordEvent.trim() : '';
       const safeEventUrl = /^https:\/\/discord(?:app)?\.com\//i.test(eventUrl) ? eventUrl : '';
       const eventLink = safeEventUrl ? ` · **[Event link ↗](${safeEventUrl})**` : '';
-      const flightText = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
+      const flightText = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${airlineEmoji(flight.flightNumber)}${flight.flightNumber} · ${flight.destination} (${type})${eventLink}`;
       container.addTextDisplayComponents(new TextDisplayBuilder().setContent(flightText));
 
       // Each flight is its own TextDisplay so native Components V2 separators can sit between them.
@@ -313,6 +326,8 @@ function confirmationEmbed(flight) {
 module.exports = {
   STATUSES,
   SESSION_TTL_MS,
+  AIRLINE_EMOJIS,
+  airlineEmoji,
   weeklyFlightEmbed,
   flightListingMessage,
   weeklyAnnouncementMessages,
