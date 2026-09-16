@@ -224,6 +224,34 @@ app.get('/api/flights/weekly-summary', assertApiAccess, async (req, res, next) =
   }
 });
 
+app.get('/api/weekly-announcement', assertApiAccess, async (req, res, next) => {
+  try {
+    const week = cleanText(req.query.week, 'Week', 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return res.status(400).json({ error: 'Week must use YYYY-MM-DD.' });
+    if (!isDatabaseConfigured()) return res.status(503).json({ error: 'Weekly announcement tracking requires Supabase.' });
+    const rows = await supabaseRequest(`weekly_announcements?select=week_start&week_start=eq.${week}`);
+    return res.json({ week, posted: rows.length > 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/api/weekly-announcement', assertApiAccess, async (req, res, next) => {
+  try {
+    const week = cleanText(req.body.week, 'Week', 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return res.status(400).json({ error: 'Week must use YYYY-MM-DD.' });
+    if (!isDatabaseConfigured()) return res.status(503).json({ error: 'Weekly announcement tracking requires Supabase.' });
+    await supabaseRequest('weekly_announcements?on_conflict=week_start', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ week_start: week })
+    });
+    return res.json({ week, posted: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.post('/api/flights', assertApiAccess, async (req, res, next) => {
   try {
     const flight = cleanFlight(req.body);

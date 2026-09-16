@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { listFlights, removeFlight } = require('../api');
 
 const data = {
@@ -13,8 +13,8 @@ const data = {
 };
 
 async function execute(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to remove flights.', ephemeral: true });
-  await interaction.deferReply({ ephemeral: true });
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to remove flights.', flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const identity = { type: interaction.options.getString('type'), date: interaction.options.getString('date'), flightNumber: interaction.options.getString('flight-number').trim().toUpperCase() };
   try {
     const flights = await listFlights();
