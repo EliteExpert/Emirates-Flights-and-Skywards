@@ -18,6 +18,17 @@ const ALLOWED_STATUSES = new Set([
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json({ limit: '50kb' }));
+
+// The community website reads the public flight list and weekly board from
+// this service in the browser, so public GETs need permissive CORS.
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+  }
+  next();
+});
+
 app.use(express.static(PUBLIC_DIRECTORY));
 
 function isDatabaseConfigured() {
