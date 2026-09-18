@@ -171,6 +171,12 @@ The bot sends `discordEvent: ""` for initial submissions. The existing API accep
 
 The native scheduler explicitly works in UTC. It calculates the next Sunday at `00:00:00Z`, waits until that instant, posts the weekly submission embed to `WEEKLY_FLIGHT_CHANNEL_ID`, then calculates the next Sunday again. It therefore does not depend on the host machine's local timezone.
 
+Because Render web services sleep when idle and Railway redeploys restart the process, the Sunday timer can be lost before it fires. To make the post reliable, each week's schedule is published with up to three attempts five minutes apart, every posted week is recorded in the `weekly_announcements` Supabase table, and on startup the bot publishes the current week's schedule if it was never posted (so a missed Sunday is caught up at the next wake-up or deploy instead of being skipped). Existing deployments must run `supabase/add-weekly-announcements.sql` once in the Supabase SQL Editor; without it the bot logs that announcement tracking is unavailable and falls back to timer-only posting.
+
+Schedules with more than 15 flights are split across multiple messages ("Part 1 of N"), because Discord caps Components V2 messages at 40 components.
+
+Flight lines are prefixed with the airline's Discord emoji based on the flight number's airline code: EK → `<:Emiratesnewtail:1480910652427079680>` and FZ → `<:flydubai:1531904943001440338>`. Other airlines show no badge.
+
 `/weekly-flight` posts the same announcement manually, but only in the configured weekly channel and for users with Manage Server permission.
 
 ### Combined deployment

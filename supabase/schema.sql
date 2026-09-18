@@ -35,3 +35,10 @@ drop trigger if exists flights_set_updated_at on public.flights;
 create trigger flights_set_updated_at
 before update on public.flights
 for each row execute function public.set_updated_at();
+
+create table if not exists public.weekly_announcements (
+  week_start date primary key,
+  posted_at timestamptz not null default now()
+);
+
+alter table public.weekly_announcements enable row level security;

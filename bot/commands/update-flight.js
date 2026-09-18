@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { updateStatus } = require('../api');
 const { STATUSES } = require('../flight-ui');
 
@@ -15,8 +15,8 @@ const data = {
 };
 
 async function execute(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to update flights.', ephemeral: true });
-  await interaction.deferReply({ ephemeral: true });
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: 'You need Manage Server permission to update flights.', flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     const result = await updateStatus({
       type: interaction.options.getString('type'),

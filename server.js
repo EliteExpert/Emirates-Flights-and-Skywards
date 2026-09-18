@@ -18,6 +18,17 @@ const ALLOWED_STATUSES = new Set([
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json({ limit: '50kb' }));
+
+// The community website reads the public flight list and weekly board from
+// this service in the browser, so public GETs need permissive CORS.
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+  }
+  next();
+});
+
 app.use(express.static(PUBLIC_DIRECTORY));
 
 function isDatabaseConfigured() {
@@ -144,6 +155,19 @@ function currentGmtWeekStart() {
   return sunday.toISOString().slice(0, 10);
 }
 
+// Discord custom emoji shown before a flight's number, keyed by the IATA
+// airline code the flight number starts with (EK247, FZ123, ...).
+const AIRLINE_EMOJIS = {
+  EK: '<:Emiratesnewtail:1480910652427079680>',
+  FZ: '<:flydubai:1531904943001440338>'
+};
+
+function airlineEmoji(flightNumber) {
+  const prefix = String(flightNumber || '').trim().toUpperCase().match(/^[A-Z]{2}/);
+  const emoji = prefix && AIRLINE_EMOJIS[prefix[0]];
+  return emoji ? `${emoji} ` : '';
+}
+
 function weeklyDiscordMessage(flights, weekStart, boardUrl) {
   const dateFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
   const conciseDate = (date) => dateFormat.format(date).replace(',', '');
@@ -157,7 +181,7 @@ function weeklyDiscordMessage(flights, weekStart, boardUrl) {
   for (const flight of flights) {
     const time = flight.departureTime || flight.arrivalTime;
     const type = flight.type === 'departure' ? 'DEP' : 'ARR';
-    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${flight.flightNumber} · ${flight.destination} (${type})`;
+    const line = `• ${conciseDate(new Date(`${flight.date}T00:00:00Z`))} · **${time} GMT** · ${airlineEmoji(flight.flightNumber)}${flight.flightNumber} · ${flight.destination} (${type})`;
     if ([...lines, line, '', `View the live board: ${boardUrl}`].join('\n').length > 1_850) {
       omitted += 1;
     } else {
@@ -219,6 +243,34 @@ app.get('/api/flights/weekly-summary', assertApiAccess, async (req, res, next) =
       flights,
       message: weeklyDiscordMessage(flights, weekStart, boardUrl)
     });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/api/weekly-announcement', assertApiAccess, async (req, res, next) => {
+  try {
+    const week = cleanText(req.query.week, 'Week', 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return res.status(400).json({ error: 'Week must use YYYY-MM-DD.' });
+    if (!isDatabaseConfigured()) return res.status(503).json({ error: 'Weekly announcement tracking requires Supabase.' });
+    const rows = await supabaseRequest(`weekly_announcements?select=week_start&week_start=eq.${week}`);
+    return res.json({ week, posted: rows.length > 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/api/weekly-announcement', assertApiAccess, async (req, res, next) => {
+  try {
+    const week = cleanText(req.body.week, 'Week', 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return res.status(400).json({ error: 'Week must use YYYY-MM-DD.' });
+    if (!isDatabaseConfigured()) return res.status(503).json({ error: 'Weekly announcement tracking requires Supabase.' });
+    await supabaseRequest('weekly_announcements?on_conflict=week_start', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ week_start: week })
+    });
+    return res.json({ week, posted: true });
   } catch (error) {
     return next(error);
   }
