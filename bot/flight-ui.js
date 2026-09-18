@@ -20,7 +20,7 @@ const STATUSES = [
   'Delayed', 'Cancelled', 'Departed', 'In Flight', 'Arrived'
 ];
 
-const AIRLINES = ['Emirates', 'Etihad Airways', 'Qatar Airways'];
+const AIRLINES = ['Emirates', 'flydubai'];
 const SESSION_TTL_MS = 10 * 60 * 1000;
 
 // Discord custom emoji shown before a flight's number, keyed by the IATA
@@ -218,7 +218,7 @@ function airlineRows() {
       .setCustomId(`add-flight:airline:${airline.toLowerCase().replace(/\s+/g, '-')}`)
       .setLabel(airline)
       .setStyle(ButtonStyle.Secondary)),
-    new ButtonBuilder().setCustomId('add-flight:airline:other').setLabel('Other').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('add-flight:airline:other').setLabel('Others').setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('add-flight:cancel').setLabel('Cancel').setStyle(ButtonStyle.Secondary)
   )];
 }
@@ -326,6 +326,7 @@ function confirmationEmbed(flight) {
 module.exports = {
   STATUSES,
   SESSION_TTL_MS,
+  AIRLINES,
   AIRLINE_EMOJIS,
   airlineEmoji,
   weeklyFlightEmbed,

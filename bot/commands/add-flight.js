@@ -8,6 +8,7 @@ const {
 } = require('discord.js');
 
 const {
+  AIRLINES,
   flightTypeRows,
   airlineRows,
   statusRow,
@@ -61,7 +62,13 @@ async function handleComponent(interaction, context) {
 
   if (action === 'airline') {
     if (value === 'other') return interaction.showModal(airlineModal());
-    session.airline = value === 'emirates' ? 'Emirates' : value === 'etihad-airways' ? 'Etihad Airways' : 'Qatar Airways';
+    // Buttons carry a slug of the airline name; an unmatched slug means the
+    // message predates the current airline list.
+    const airline = AIRLINES.find((name) => name.toLowerCase().replace(/\s+/g, '-') === value);
+    if (!airline) {
+      return interaction.reply({ content: 'That flight-entry control is no longer valid. Start again with `/add-flight`.', flags: MessageFlags.Ephemeral });
+    }
+    session.airline = airline;
     return interaction.update({ content: 'Select the flight status.', components: statusRow() });
   }
 
