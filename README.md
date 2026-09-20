@@ -216,3 +216,7 @@ The Discord bot is the primary interface for flight operations. Staff can add, r
 - `/weekly-flight` — publish the current weekly schedule to the configured channel.
 
 All flight persistence continues through the project's existing flight service/database so the FIDS display and Discord bot use the same data. Discord is the only intended operational interface.
+
+### PTFS route fields
+
+Flight submissions now require the in-game route: `ptfsDeparture` and `ptfsArrival` (for example `Dubai Intl (OMDB)` / `Heathrow (EGLL)`). The Discord bot collects them on a second modal screen after the flight details, and API callers must include both fields. The columns live in `flights` via `supabase/add-ptfs-route.sql` and are returned by `GET /api/flights` as `ptfsDeparture` / `ptfsArrival`.

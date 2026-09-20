@@ -42,3 +42,6 @@ create table if not exists public.weekly_announcements (
 );
 
 alter table public.weekly_announcements enable row level security;
+
+alter table public.flights add column if not exists ptfs_departure text;
+alter table public.flights add column if not exists ptfs_arrival text;

@@ -19,6 +19,7 @@ const {
   dateModal,
   airlineModal,
   detailsModal,
+  ptfsRouteModal,
   confirmationEmbed
 } = require('../flight-ui');
 
@@ -112,6 +113,23 @@ async function handleModal(interaction, context) {
       return interaction.reply({ content: 'Invalid scheduled time. Use 24-hour `HH:MM` format, for example `19:30`.', flags: MessageFlags.Ephemeral });
     }
 
+    session.flightNumber = flightNumber;
+    session.scheduledTime = scheduledTime;
+    session.route = route;
+    session.aircraft = aircraft;
+    session.terminal = terminal;
+    return interaction.showModal(ptfsRouteModal());
+  }
+
+  if (interaction.customId === 'add-flight:ptfs-route') {
+    const flightNumber = session.flightNumber;
+    const scheduledTime = session.scheduledTime;
+    const route = session.route;
+    const aircraft = session.aircraft;
+    const terminal = session.terminal;
+    const ptfsDeparture = interaction.fields.getTextInputValue('ptfsDeparture').trim();
+    const ptfsArrival = interaction.fields.getTextInputValue('ptfsArrival').trim();
+
     let createdEvent = null;
     try {
       const guild = await interaction.client.guilds.fetch(context.config.discordGuildId);
@@ -135,6 +153,8 @@ async function handleModal(interaction, context) {
         type: session.flightType,
         date: session.date,
         flightNumber,
+        ptfsDeparture,
+        ptfsArrival,
         airline: session.airline,
         ...(session.flightType === 'departure' ? { departureTime: scheduledTime } : { arrivalTime: scheduledTime }),
         destination: route,

@@ -83,7 +83,9 @@ function toClientFlight(row) {
     aircraft: row.aircraft,
     terminal: row.terminal,
     status: row.status,
-    discordEvent: row.discord_event
+    discordEvent: row.discord_event,
+    ptfsDeparture: row.ptfs_departure || '',
+    ptfsArrival: row.ptfs_arrival || ''
   };
 }
 
@@ -130,7 +132,9 @@ function cleanFlight(body) {
     aircraft: cleanText(body.aircraft, 'Aircraft', 80),
     terminal: cleanText(body.terminal, 'Terminal', 20).toUpperCase(),
     status,
-    discord_event: eventUrl ? eventUrl.toString() : ''
+    discord_event: eventUrl ? eventUrl.toString() : '',
+    ptfs_departure: cleanText(body.ptfsDeparture, 'PTFS departure airport', 60),
+    ptfs_arrival: cleanText(body.ptfsArrival, 'PTFS arrival airport', 60)
   };
 }
 

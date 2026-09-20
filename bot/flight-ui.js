@@ -303,6 +303,22 @@ function detailsModal() {
     )));
 }
 
+// Discord modals cap at five input rows, so the required in-game (PTFS)
+// route lives on a second screen shown right after the first.
+function ptfsRouteModal() {
+  const { ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+  const fields = [
+    ['ptfsDeparture', 'PTFS Departure Airport', 'Dubai Intl (OMDB)', 60],
+    ['ptfsArrival', 'PTFS Arrival Airport', 'Heathrow (EGLL)', 60]
+  ];
+  return new ModalBuilder()
+    .setCustomId('add-flight:ptfs-route')
+    .setTitle('PTFS Route')
+    .addComponents(fields.map(([id, label, placeholder]) => new ActionRowBuilder().addComponents(
+      new TextInputBuilder().setCustomId(id).setLabel(label).setPlaceholder(placeholder).setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(60)
+    )));
+}
+
 function confirmationEmbed(flight) {
   const time = flight.departureTime || flight.arrivalTime;
   return new EmbedBuilder()
@@ -343,5 +359,6 @@ module.exports = {
   dateModal,
   airlineModal,
   detailsModal,
+  ptfsRouteModal,
   confirmationEmbed
 };
