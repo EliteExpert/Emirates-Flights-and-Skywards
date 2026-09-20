@@ -10,6 +10,9 @@ const FLIGHTS_FILE = path.join(PUBLIC_DIRECTORY, 'flights.json');
 const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FIDS_API_KEY = process.env.FIDS_API_KEY;
+// The PTFS world airports (the only valid departure/arrival values)
+const PTFS_AIRPORTS = ['Orenji', 'Perth', 'Grindavik', 'Izolirani', 'Mellor', 'Greater Rockford', 'Sauthemptona', 'Larcana', 'Phapos'];
+
 const ALLOWED_STATUSES = new Set([
   'Check-in Open', 'Boarding', 'Final Call', 'Gate Closed',
   'Delayed', 'Cancelled', 'Departed', 'In Flight', 'Arrived'
@@ -96,6 +99,13 @@ function cleanText(value, name, maximumLength = 120) {
   return value.trim();
 }
 
+function canonicalPtfsAirport(value) {
+  const supplied = String(value || '').trim();
+  const match = PTFS_AIRPORTS.find((name) => name.toLowerCase() === supplied.toLowerCase());
+  if (!match) throw new Error(`PTFS airport must be one of: ${PTFS_AIRPORTS.join(', ')}.`);
+  return match;
+}
+
 function cleanFlight(body) {
   const type = cleanText(body.type, 'Type', 20).toLowerCase();
   if (!['departure', 'arrival'].includes(type)) throw new Error('Type must be departure or arrival.');
@@ -133,8 +143,8 @@ function cleanFlight(body) {
     terminal: cleanText(body.terminal, 'Terminal', 20).toUpperCase(),
     status,
     discord_event: eventUrl ? eventUrl.toString() : '',
-    ptfs_departure: cleanText(body.ptfsDeparture, 'PTFS departure airport', 60),
-    ptfs_arrival: cleanText(body.ptfsArrival, 'PTFS arrival airport', 60)
+    ptfs_departure: canonicalPtfsAirport(body.ptfsDeparture),
+    ptfs_arrival: canonicalPtfsAirport(body.ptfsArrival)
   };
 }
 

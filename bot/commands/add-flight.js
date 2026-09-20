@@ -23,6 +23,9 @@ const {
   confirmationEmbed
 } = require('../flight-ui');
 
+// The PTFS world airports (the only valid departure/arrival values)
+const PTFS_AIRPORTS = ['Orenji', 'Perth', 'Grindavik', 'Izolirani', 'Mellor', 'Greater Rockford', 'Sauthemptona', 'Larcana', 'Phapos'];
+
 const data = { name: 'add-flight', description: 'Add a flight to the schedule.' };
 
 function cancelReply() {
@@ -129,6 +132,17 @@ async function handleModal(interaction, context) {
     const terminal = session.terminal;
     const ptfsDeparture = interaction.fields.getTextInputValue('ptfsDeparture').trim();
     const ptfsArrival = interaction.fields.getTextInputValue('ptfsArrival').trim();
+    const canonical = (value) => PTFS_AIRPORTS.find((name) => name.toLowerCase() === value.toLowerCase());
+    const departureName = canonical(ptfsDeparture);
+    const arrivalName = canonical(ptfsArrival);
+    if (!departureName || !arrivalName) {
+      return interaction.reply({ content: `PTFS airports must be one of: ${PTFS_AIRPORTS.join(', ')}.`, flags: MessageFlags.Ephemeral });
+    }
+    if (departureName === arrivalName) {
+      return interaction.reply({ content: 'PTFS departure and arrival cannot be the same airport.', flags: MessageFlags.Ephemeral });
+    }
+    const ptfsDepartureName = departureName;
+    const ptfsArrivalName = arrivalName;
 
     let createdEvent = null;
     try {
@@ -153,8 +167,8 @@ async function handleModal(interaction, context) {
         type: session.flightType,
         date: session.date,
         flightNumber,
-        ptfsDeparture,
-        ptfsArrival,
+        ptfsDeparture: ptfsDepartureName,
+        ptfsArrival: ptfsArrivalName,
         airline: session.airline,
         ...(session.flightType === 'departure' ? { departureTime: scheduledTime } : { arrivalTime: scheduledTime }),
         destination: route,
