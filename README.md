@@ -211,7 +211,7 @@ The Discord bot is the primary interface for flight operations. Staff can add, r
 
 - `/add-flight` — guided flight creation with an optional Discord Scheduled Event created automatically.
 - `/flights` — retrieve the current schedule, a UTC week, a date, or departures/arrivals.
-- `/update-flight` — change an existing flight's status.
+- `/update-flight` — change an existing flight's status and/or scheduled time; a new `time` (GMT, `HH:MM`) reschedules the linked Discord event and the FIDS board together.
 - `/remove-flight` — remove an existing flight and its Discord Scheduled Event when one is linked.
 - `/weekly-flight` — publish the current weekly schedule to the configured channel.
 
